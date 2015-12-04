@@ -25,6 +25,29 @@ class ApacheLogParserTestCase(unittest.TestCase):
 
         self.assertEqual(apache_log_parser.get_fieldnames(format_string), ('remote_host', 'pid', 'time_received', 'time_us', 'request_first_line', 'status', 'response_bytes_clf', 'request_header_referer', 'request_header_user_agent', 'remote_logname', 'remote_user'))
 
+    def __test_single_pattern(self):
+        # this test fails currently
+        format_string = '%{X-Forwarded-For}i'
+        sample = '127.0.0.1'
+        parser = apache_log_parser.make_parser(format_string)
+        data = parser(sample)
+        self.assertEqual(data['request_header_x_forwarded_for'], '127.0.0.1')
+
+    def test_session_attributes(self):
+        format_string = '%{X-Forwarded-For}i %h %l "%u" %t "%{Referer}i" "%{Location}o" "%r" %s %b %S "%{APACHE2}r" "%{UNIQUE_ID}s" %D "%I" %T'
+        sample = '127.0.0.1 10.10.100.100 - "-" [03/Dec/2015:04:25:10 +0100] "-" "-" "GET /api/categories?key=nikk1Gd HTTP/1.1" 200 1225 - "www04" "12342222" 1 "catalina-exec-101" 0.001'
+        parser = apache_log_parser.make_parser(format_string)
+        data = parser(sample)
+        self.assertEqual(data['session_attribute_unique_id'], '12342222')
+        self.assertEqual(data['request_header_x_forwarded_for'], '127.0.0.1')
+
+    def test_servlet_request_attributes(self):
+        format_string = '%{X-Forwarded-For}i %h %l "%u" %t "%{Referer}i" "%{Location}o" "%r" %s %b %S "%{APACHE2}r" "%{UNIQUE_ID}r" %D "%I" %T'
+        sample = '127.0.0.1 10.10.100.100 - "-" [03/Dec/2015:04:25:10 +0100] "-" "-" "GET /api/categories?key=nikk1Gd HTTP/1.1" 200 1225 - "www04" "-" 1 "catalina-exec-101" 0.001'
+        parser = apache_log_parser.make_parser(format_string)
+        data = parser(sample)
+        self.assertEqual(data['servletrequest_attribute_apache2'], 'www04')
+
     def test_pr8(self):
         parser = apache_log_parser.make_parser('%h %{remote}p %v %{local}p %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %P %D %{number}n %{SSL_PROTOCOL}x %{SSL_CIPHER}x %k %{UNIQUE_ID}e ')
         data = parser('127.0.0.1 50153 mysite.co.uk 443 [28/Nov/2014:10:03:40 +0000] "GET /mypage/this/that?stuff=all HTTP/1.1" 200 5129 "-" "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36" 18572 363701 0 TLSv1.01 MY-CYPHER 0 VHhIfKwQGCMAAEiMUIAAAAF ')

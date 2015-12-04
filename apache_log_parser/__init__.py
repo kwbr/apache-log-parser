@@ -119,7 +119,7 @@ def format_time(matched_strings):
 
     # Parse it to a timezone string
     obj = apachetime(time_received)
-    
+
     # For backwards compatibility, time_received_datetimeobj is a naive
     # datetime, so we have to create a timezone less version
     naive_obj = obj.replace(tzinfo=None)
@@ -160,6 +160,8 @@ FORMAT_STRINGS = [
     [make_regex('%m'), '.*?', lambda match: 'method', lambda matched_strings: matched_strings], #	The request method
     [make_regex('%\{[^\}]+?\}n'), '.*?', extract_inner_value("note_", "n") , lambda matched_strings: matched_strings], #	The contents of note Foobar from another module.
     [make_regex('%\{[^\}]+?\}o'), '.*?',extract_inner_value("response_header_", "o") , lambda matched_strings: matched_strings], #	The contents of Foobar: header line(s) in the reply.
+    [make_regex('%\{[^\}]+?\}r'), '.*?',extract_inner_value("servletrequest_attribute_", "r") , lambda matched_strings: matched_strings], #	The contents of a ServletRequest attribute
+    [make_regex('%\{[^\}]+?\}s'), '.*?',extract_inner_value("session_attribute_", "s") , lambda matched_strings: matched_strings], #	The contents of a HttpSession attribute
     [make_regex('%p'), '.*?', lambda match: 'server_port', lambda matched_strings: matched_strings], #	The canonical port of the server serving the request
     [make_regex('%\{[^\}]+?\}p'), '.*?', extract_inner_value("server_port_", "p") , lambda matched_strings: matched_strings], #	The canonical port of the server serving the request or the server's actual port or the client's actual port. Valid formats are canonical, local, or remote.
     [make_regex('%P'), '.*?', lambda match: 'pid', lambda matched_strings: matched_strings], #	The process ID of the child that serviced the request.
@@ -183,6 +185,7 @@ FORMAT_STRINGS = [
         # (This directive was %c in late versions of Apache 1.3, but this conflicted with the historical ssl %{var}c syntax.)
     [make_regex('%I'), '.*?', lambda match: 'bytes_rx', lambda matched_strings: matched_strings], #	Bytes received, including request and headers, cannot be zero. You need to enable mod_logio to use this.
     [make_regex('%O'), '.*?', lambda match: 'bytes_tx', lambda matched_strings: matched_strings], #	Bytes sent, including headers, cannot be zero. You need to enable mod_logio to use this.
+    [make_regex('%S'), '.*?', lambda match: 'session_id' , lambda matched_strings: matched_strings] # The User session ID
 ]
 
 class Parser:
